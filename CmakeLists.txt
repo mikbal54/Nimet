@@ -1,0 +1,141 @@
+cmake_minimum_required(VERSION 2.6) 
+set(CMAKE_ALLOW_LOOSE_LOOP_CONSTRUCTS TRUE) 
+cmake_policy(SET CMP0003 NEW) 
+ 
+set(PROJECT_NAME Nimet)
+project(${PROJECT_NAME}) 
+
+if(WIN32)
+	set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SUBSYSTEM:WINDOWS")
+	#set_target_properties(${PROJECT_NAME} PROPERTIES PLATFORM_TOOLSET "v110_xp") # this doesn't work :( please set it by hand
+endif(WIN32)
+
+if(MSVC)
+add_definitions(-DUNICODE -D_UNICODE)
+endif(MSVC)
+
+set(LIBS C:/oyunLibs2012)
+
+set(OGRESDK "C:/OyunLibs2012/Ogre3D-19/PROJECT/sdk") 
+set(OISSDK "C:/OyunLibs2012/OIS/ois/trunk")
+set(RESOURCE_WATCHER "C:/PROJECTS/ResouceWatcher")
+
+SET(EXE_PATH "C:/Nimet/bin/")
+SET(EXECUTABLE_OUTPUT_PATH ${EXE_PATH})
+set(ogreHTML "C:/PROJECTS/ogreHTML")
+
+link_directories(
+	${LIBS}/berkelium/lib
+	${LIBS}/Boost/lib
+	${OGRESDK}/lib/debug
+	${OGRESDK}/lib/release
+	${OISSDK}/lib
+)
+
+#find all headers, store them
+file(GLOB Headers
+    "include/*.h"
+) 
+
+file(GLOB Source_UsePrecompiled
+	"src/*.cpp"
+)
+
+set(Source_CreatePrecompiled
+	PreCompile.cpp
+)
+
+file(GLOB Source_Other
+	res.rc
+	${ogreHTML}/src/*.cpp
+	${RESOURCE_WATCHER}/src/*.cpp
+	"include/External/MovableText/*.cpp"
+	"include/External/FileWatcher/source/*.cpp"
+	"include/External/DotScene/*.cpp"
+)
+
+include_directories(
+	${OGRESDK}/include
+	${OGRESDK}/include/OGRE
+	${LIBS}/Boost
+	${LIBS}/berkelium/include
+	${ogreHTML}/include
+	${RESOURCE_WATCHER}/include
+	${OISSDK}/includes
+	include
+	include/External/FileWatcher/include
+	include/External/DotScene
+)
+
+if (MSVC)
+
+    foreach( src_file ${Source_CreatePrecompiled} )
+        set_source_files_properties(
+            ${src_file}
+            PROPERTIES
+            COMPILE_FLAGS "/YcPreCompile.h"
+            )
+    endforeach( src_file ${Source_CreatePrecompiled} )
+	
+    foreach( src_file ${Source_UsePrecompiled} )
+        set_source_files_properties(
+            ${src_file}
+            PROPERTIES
+            COMPILE_FLAGS "/YuPreCompile.h"
+            )
+    endforeach( src_file ${Source_UsePrecompiled} )
+	#list(APPEND myproject_SOURCE_FILES PreCompile.cpp)
+	
+endif (MSVC)
+
+add_executable(${PROJECT_NAME} ${Source_CreatePrecompiled}
+ ${Source_UsePrecompiled}
+ ${Source_Other}
+ ${Headers}
+ )
+
+if(MSVC)
+
+set(LINK_LIBRARY 
+optimized OgreMain.lib
+optimized OgreOverlay.lib
+optimized berkelium.lib
+optimized OIS_static.lib
+optimized OgreTerrain.lib
+debug OgreMain_d.lib
+debug OgreOverlay_d.lib
+debug OgreTerrain_d.lib
+debug berkelium.lib
+debug OIS_static_d.lib
+)
+
+
+
+target_link_libraries(${PROJECT_NAME} ${LINK_LIBRARY})
+
+if (MSVC)
+    foreach( src_file ${Source_UsePrecompiled} )
+ 
+    endforeach( src_file ${Source_UsePrecompiled} )	
+endif (MSVC)
+
+#set(DUMMY_SOURCE "src/PreCompile.cpp")
+
+#add_library(${PROJECT_NAME} ${DUMMY_SOURCE} ${Headers})
+
+source_group("SOURCES" FILES ${Source_UsePrecompiled} ${Source_CreatePrecompiled} ${Source_Other})
+source_group("HEADERS" FILES  ${Headers})
+
+
+if(WIN32)
+   set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS_DEBUG "/SUBSYSTEM:windows")
+  # set_target_properties(${PROJECT_NAME} PROPERTIES COMPILE_DEFINITIONS_DEBUG "_CONSOLE")
+   set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS_RELWITHDEBINFO "/SUBSYSTEM:windows")
+   #set_target_properties(${PROJECT_NAME} PROPERTIES COMPILE_DEFINITIONS_RELWITHDEBINFO "_CONSOLE")
+   set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS_RELEASE "/SUBSYSTEM:windows")
+   set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS_MINSIZEREL "/SUBSYSTEM:windows")
+endif(WIN32)
+
+
+endif ()
+
